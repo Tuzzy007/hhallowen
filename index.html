@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kísértetház: Felnőtt kiadás</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Nunito:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--orange:#ff7a1a;--gold:#ffc83d;--purple:#9b5de5;--green:#3ddc84;--red:#ff4d5e;--text:#f6e9d0;--card:rgba(30,17,54,.86)}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:radial-gradient(ellipse at 50% 0%,#2a1250 0%,#120a21 55%,#07030f 100%) fixed;color:var(--text);font-family:'Nunito','Segoe UI',system-ui,sans-serif;overflow-x:hidden}
+canvas#bg,canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+#bg{z-index:0}#fx{z-index:50}
+.moon{position:fixed;top:4vh;right:6vw;width:min(15vw,130px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff7d6,#f3d77a 60%,#caa44a);box-shadow:0 0 60px 20px rgba(255,214,102,.35);z-index:0;opacity:.85}
+.fog{position:fixed;left:-50%;width:200%;height:28vh;bottom:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 50% 100%,rgba(190,170,255,.16),transparent 70%);animation:fog 28s linear infinite alternate}
+.fog.f2{height:20vh;opacity:.7;animation-duration:19s;animation-direction:alternate-reverse}
+@keyframes fog{from{transform:translateX(-12%)}to{transform:translateX(12%)}}
+#flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:60}
+#flash.on{animation:flash .7s}
+@keyframes flash{0%{opacity:.85}12%{opacity:.1}22%{opacity:.7}100%{opacity:0}}
+.wrap{position:relative;z-index:2;max-width:940px;margin:0 auto;padding:14px 16px 60px}
+h1{font-family:'Creepster','Chiller',fantasy;font-weight:400;letter-spacing:3px;font-size:clamp(30px,6vw,56px);margin:8px 0 14px;text-align:center;color:var(--orange);text-shadow:0 0 18px rgba(255,122,26,.7),3px 3px 0 #000;animation:flick 6s infinite}
+@keyframes flick{0%,92%,100%{opacity:1}93%{opacity:.4}94%{opacity:1}96%{opacity:.55}97%{opacity:1}}
+h2,h3{font-family:'Creepster','Chiller',fantasy;font-weight:400;letter-spacing:2px;color:var(--gold);text-shadow:2px 2px 0 #000;margin:.3em 0}
+h2{font-size:clamp(24px,4.5vw,36px)}
+.card{background:var(--card);backdrop-filter:blur(6px);border:2px solid rgba(255,122,26,.75);border-radius:22px;padding:26px;text-align:center;box-shadow:0 0 35px rgba(255,122,26,.25),inset 0 0 30px rgba(155,93,229,.14);animation:rise .55s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(24px) scale(.98)}to{opacity:1;transform:none}}
+.hidden{display:none!important}
+.btn{font-family:inherit;background:linear-gradient(180deg,#ff8a2a,#d35400);color:#fff;border:none;padding:15px 30px;font-size:19px;border-radius:12px;cursor:pointer;font-weight:900;margin:8px;box-shadow:0 5px 0 #8a3500,0 8px 20px rgba(0,0,0,.4);transition:transform .12s,filter .2s}
+.btn:hover{filter:brightness(1.12);transform:translateY(-2px)}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #8a3500}
+.btn.small{font-size:15px;padding:9px 18px;box-shadow:0 3px 0 rgba(0,0,0,.5)}
+.btn.ghost{background:linear-gradient(180deg,#8e57d6,#5d2fa3);box-shadow:0 3px 0 #3a1a70}
+.btn.go{background:linear-gradient(180deg,#34d97d,#168a4b);box-shadow:0 5px 0 #0b5a2f}
+.btn.grey{background:linear-gradient(180deg,#777,#444);box-shadow:0 3px 0 #222}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+#timer{font-family:'Courier New',monospace;font-weight:900;font-size:clamp(56px,13vw,112px);color:#ff5a4a;text-shadow:0 0 22px rgba(255,80,60,.85);margin:10px 0}
+#timer.danger{animation:beat 1s infinite}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+.warn{font-size:clamp(20px,3.5vw,30px);font-weight:900;color:#ff5a4a;animation:pulse .7s infinite alternate}
+@keyframes pulse{from{opacity:.3}to{opacity:1}}
+.cfg{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:14px 0}
+label.f{display:flex;flex-direction:column;font-size:14px;font-weight:700;gap:4px;color:#e9d3ff}
+select,input[type=text]{padding:12px;font-size:18px;border-radius:10px;border:2px solid var(--orange);background:#120a21;color:#fff;text-align:center;font-family:inherit}
+input[type=text]{width:min(90%,340px);text-transform:uppercase;letter-spacing:3px;margin:10px 0}
+.toggles{display:flex;flex-wrap:wrap;gap:10px 22px;justify-content:center;margin:10px 0;font-weight:700}
+.toggles label{cursor:pointer;display:flex;gap:8px;align-items:center}
+.toggles input{width:20px;height:20px;accent-color:var(--orange)}
+.story-box{font-size:clamp(17px,2.6vw,22px);line-height:1.65;color:var(--gold);background:rgba(5,2,12,.8);padding:22px;border-radius:14px;border-left:6px solid var(--orange);text-align:left;margin:14px 0;min-height:120px}
+/* HUD */
+#hud{position:sticky;top:0;z-index:20;margin:0 -16px 14px;padding:10px 16px;background:rgba(10,5,20,.88);backdrop-filter:blur(8px);border-bottom:2px solid rgba(255,122,26,.5)}
+.hudrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#floorLbl{font-weight:900;color:var(--gold)}
+#dots{display:flex;gap:7px}
+#dots i{width:15px;height:15px;border-radius:50%;background:#3a2760;border:2px solid #6a4aa8;transition:.3s}
+#dots i.done{background:var(--green);border-color:#b8ffd6;box-shadow:0 0 10px var(--green)}
+#dots i.cur{background:var(--orange);border-color:#ffd9b0;box-shadow:0 0 12px var(--orange);animation:pulse .9s infinite alternate}
+#escape{font-family:'Courier New',monospace;font-weight:900;font-size:22px;color:#9be7ff}
+#escape.low{color:#ff5a4a;animation:pulse .6s infinite alternate}
+.kids{display:flex;gap:8px}
+.kid{font-size:22px;padding:2px 8px;border-radius:20px;background:#2a1a4a;opacity:.45;transition:.3s;display:flex;align-items:center;gap:4px;font-size:15px;font-weight:700}
+.kid b{font-size:22px}
+.kid.on{opacity:1;background:#6a3a12;box-shadow:0 0 12px var(--orange)}
+#bag{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;font-size:13px;font-weight:700}
+#bag span{background:#2f1f55;border:1px solid #7a5bd0;border-radius:14px;padding:3px 10px;animation:rise .4s}
+.level-tag{display:inline-block;background:linear-gradient(90deg,#6a1fc2,#9b3dd8);padding:6px 18px;border-radius:20px;font-weight:900;margin-bottom:8px}
+.roles{margin:6px 0 2px}
+.role-tag{display:inline-block;background:#cf6a17;padding:5px 12px;border-radius:7px;font-size:14px;font-weight:900;margin:3px}
+.story{font-size:clamp(17px,2.5vw,21px);line-height:1.6;color:#ffe9a6;background:rgba(5,2,12,.75);padding:18px 20px;border-radius:12px;border-left:6px solid var(--orange);text-align:left;margin:12px 0}
+.hint{background:rgba(70,180,255,.12);border:2px dashed #62c7ff;color:#bfeaff;padding:12px;border-radius:10px;margin:10px 0;font-weight:700}
+.fb{min-height:30px;font-size:20px;font-weight:900;margin:10px 0}
+.fb.ok{color:var(--green)}.fb.bad{color:var(--red)}
+.shake{animation:shake .45s}
+@keyframes shake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+.locked{pointer-events:none;opacity:.55;filter:saturate(.7)}
+.cipher{font-family:'Courier New',monospace;font-size:clamp(28px,7vw,54px);font-weight:900;color:#7dffb4;background:#04120b;border:2px solid #1f7a48;border-radius:12px;padding:16px;text-shadow:0 0 14px #2cff8a;letter-spacing:5px;margin:10px 0}
+.abc{font-family:'Courier New',monospace;letter-spacing:4px;font-size:clamp(12px,2.4vw,18px);color:#a9a0c9;word-break:break-all;margin-bottom:6px}
+.tiles{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+.tile{width:clamp(96px,24vw,150px);aspect-ratio:1;border-radius:50%;border:5px solid #fff6;background:radial-gradient(circle at 35% 30%,#fff9,var(--c) 55%,#000a);cursor:pointer;font-size:clamp(46px,11vw,76px);box-shadow:0 0 26px var(--c);transition:transform .2s;animation:bob 2.4s ease-in-out infinite}
+.tile:nth-child(2){animation-delay:.4s}.tile:nth-child(3){animation-delay:.8s}
+.tile:hover{transform:scale(1.12)}
+@keyframes bob{50%{translate:0 -10px}}
+.emoji-grid{display:grid;gap:6px;justify-content:center;margin:14px auto;background:#0b0618;padding:14px;border-radius:14px;border:2px solid #4a2a8a;width:fit-content;max-width:100%}
+.emoji-grid button{background:transparent;border:none;font-size:clamp(26px,6vw,40px);cursor:pointer;padding:2px;border-radius:8px;transition:.15s}
+.emoji-grid button:hover{background:#ffffff20;transform:scale(1.2)}
+.numpad{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:12px 0}
+.numpad .btn{width:68px;padding:12px 0;margin:3px;font-size:26px}
+.shelf,.slots{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.flaskbtn{background:none;border:none;color:#fff;font-weight:900;font-family:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:14px;transition:.15s}
+.flaskbtn:hover{transform:translateY(-6px)}
+.flaskbtn.used{opacity:.25;pointer-events:none}
+.flask{width:56px;height:84px;position:relative;border:3px solid #ffffffaa;border-top:none;border-radius:6px 6px 28px 28px;background:linear-gradient(to top,var(--c) 68%,#ffffff18 68%);box-shadow:0 0 14px var(--c)}
+.flask::before{content:'';position:absolute;top:-18px;left:14px;width:22px;height:18px;border:3px solid #ffffffaa;border-bottom:none;border-radius:4px 4px 0 0}
+.slot{width:78px;height:112px;border:3px dashed #8e66d9;border-radius:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#120a21}
+.slot small{color:#8e66d9;font-weight:900;font-size:26px}
+.memgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:420px;margin:16px auto}
+.mem{aspect-ratio:1;font-size:clamp(40px,11vw,64px);border-radius:16px;border:3px solid #b98cff;background:linear-gradient(135deg,#4b2891,#2a1560);color:#fff;cursor:pointer;transition:transform .25s,background .25s;transform-style:preserve-3d}
+.mem.up{background:#fff3d0;transform:rotateY(0)}
+.mem.ok{background:#1f6b43;border-color:#8dffbc}
+.codeSlots{display:flex;gap:12px;justify-content:center;margin:14px 0}
+.codeSlots b{width:64px;height:84px;border:3px solid var(--orange);border-radius:12px;font-size:48px;display:flex;align-items:center;justify-content:center;background:#0b0618;font-family:'Courier New',monospace;color:var(--gold)}
+.stars{font-size:clamp(40px,10vw,70px);letter-spacing:8px;filter:drop-shadow(0 0 12px gold)}
+.stats{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.stats div{background:#2a1a4a;padding:10px 18px;border-radius:12px;font-weight:900}
+.cert{border:6px double var(--gold);border-radius:14px;padding:22px;margin:16px 0;background:rgba(255,200,61,.07)}
+.cert h3{font-size:34px}
+#toast{position:fixed;top:78px;left:50%;transform:translateX(-50%);z-index:70;background:#1c0f38;border:2px solid var(--gold);padding:12px 22px;border-radius:14px;font-weight:900;box-shadow:0 0 25px rgba(255,200,61,.5);animation:rise .4s}
+@media print{body *{visibility:hidden}#cert,#cert *{visibility:visible}#cert{position:absolute;left:0;top:0;width:100%;color:#000}#cert h3{color:#a04000;text-shadow:none}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important}}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas><canvas id="fx"></canvas>
+<div class="moon"></div><div class="fog"></div><div class="fog f2"></div>
+<div id="flash"></div>
+<div id="toast" class="hidden"></div>
+
+<div class="wrap">
+  <h1>🏰 A Kísértetház Képernyő-csapdája 🏰<br><small style="font-size:.45em;letter-spacing:6px;color:#c9a7ff">FELNŐTT KIADÁS · 13 REJTÉLY</small></h1>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div class="hudrow">
+      <div id="floorLbl"></div>
+      <div id="dots"></div>
+      <div id="escape" title="Szökési idő">⏱ --:--</div>
+    </div>
+    <div id="bag"></div>
+  </div>
+
+  <!-- 1. INDÍTÁS / VISSZASZÁMLÁLÁS -->
+  <section id="setup" class="card">
+    <div id="resumeBox" class="hidden">
+      <p style="font-size:19px;font-weight:800">🕯️ Megszakadt játékot találtam!</p>
+      <button class="btn go" id="resumeBtn"></button>
+      <button class="btn grey small" id="newBtn">🗑️ Inkább újat kezdek</button>
+      <hr style="border-color:#ffffff22;margin:18px 0">
+    </div>
+    <p style="font-size:19px">A játék teljesen online zajlik ezen a gépen. Állítsd be az időt, és nyomd meg a gombot – a kastély kapui hamarosan megnyílnak…</p>
+    <div class="cfg" id="cfgBox">
+      <label class="f">⏳ Visszaszámlálás a játék indulásáig
+        <select id="cdSel">
+          <option value="3600" selected>1 óra</option>
+          <option value="1800">30 perc</option>
+          <option value="600">10 perc</option>
+          <option value="60">1 perc</option>
+        </select></label>
+      <label class="f">⏱ Szökési idő (játék közben)
+        <select id="escSel">
+          <option value="30">30 perc</option>
+          <option value="45" selected>45 perc</option>
+          <option value="60">60 perc</option>
+          <option value="0">Nincs időkorlát</option>
+        </select></label>
+    </div>
+    <div class="toggles">
+      <label><input type="checkbox" id="tRead" checked> 🗣️ Felolvasás</label>
+      <label><input type="checkbox" id="tSnd" checked> 🔊 Hangeffektek</label>
+      <label><input type="checkbox" id="tMus" checked> 🎵 Hátborzongató zene</label>
+    </div>
+    <div id="timer">60:00</div>
+    <div id="warn" class="warn hidden">🚨 KÉSZÜLJETEK! MÁR CSAK PÁR MÁSODPERC! 🚨</div>
+    <div id="startRow">
+      <button class="btn go" id="startBtn">⏳ KÜLDETÉS INDÍTÁSA</button>
+      <button class="btn grey small" id="testBtn">⏩ Teszt (utolsó 10 mp)</button>
+    </div>
+    <button class="btn grey small hidden" id="stopBtn">✖ Visszaszámlálás megállítása</button>
+  </section>
+
+  <!-- 2. BEVEZETŐ -->
+  <section id="story" class="card hidden">
+    <div style="font-size:64px">🏚️</div>
+    <div class="story-box" id="storyText"></div>
+    <button class="btn ghost small" id="storyRead">🔊 Újraolvasás</button><br>
+    <button class="btn go" id="storyGo">🔮 Első feladat indítása</button>
+  </section>
+
+  <!-- Emeletváltás -->
+  <section id="interlude" class="card hidden">
+    <div id="ilEmoji" style="font-size:78px"></div>
+    <h2 id="ilTitle"></h2>
+    <div class="story-box" id="ilText"></div>
+    <button class="btn ghost small" id="ilRead">🔊 Újraolvasás</button><br>
+    <button class="btn go" id="ilGo">🚪 Belépünk!</button>
+  </section>
+
+  <!-- Feladat -->
+  <section id="stage" class="card hidden"></section>
+
+  <!-- Finálé -->
+  <section id="finale" class="card hidden"></section>
+</div>
+
+<script>
+'use strict';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const rnd=n=>Math.floor(Math.random()*n);
+const shuf=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z]/gi,'').toUpperCase();
+const plain=t=>t.replace(/[\u{1F000}-\u{1FAFF}\u2600-\u27BF\uFE0F]/gu,'').replace(/\s+/g,' ');
+const fmt=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+
+/* ================= ÁLLAPOT ================= */
+const LS='kh-digital-trap-adult-v1', LSP='kh-prefs-adult-v1';
+const state={phase:'setup',startAt:0,stage:0,hints:0,mistakes:0,clues:{},spiders:0,gameStart:0,escapeEnd:0,escapeMin:45,graces:0,hintsShown:{}};
+const prefs={read:true,snd:true,mus:true};
+const save=()=>{try{localStorage.setItem(LS,JSON.stringify(state))}catch(e){}};
+const load=()=>{try{return JSON.parse(localStorage.getItem(LS)||'null')}catch(e){return null}};
+const clearSave=()=>{try{localStorage.removeItem(LS)}catch(e){}};
+try{Object.assign(prefs,JSON.parse(localStorage.getItem(LSP)||'{}'))}catch(e){}
+const savePrefs=()=>{try{localStorage.setItem(LSP,JSON.stringify(prefs))}catch(e){}};
+
+/* ================= HANG ================= */
+let ac=null,master=null,drone=null;
+function ctx(){
+  if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();master=ac.createGain();master.gain.value=.55;master.connect(ac.destination)}
+  if(ac.state==='suspended')ac.resume();
+  return ac;
+}
+function tone(f,d=.2,type='sine',v=.15,delay=0,to=null){
+  if(!prefs.snd)return;
+  try{
+    const a=ctx(),t=a.currentTime+delay,o=a.createOscillator(),g=a.createGain();
+    o.type=type;o.frequency.setValueAtTime(f,t);
+    if(to)o.frequency.exponentialRampToValueAtTime(to,t+d);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(v,t+.012);g.gain.exponentialRampToValueAtTime(.001,t+d);
+    o.connect(g);g.connect(master);o.start(t);o.stop(t+d+.05);
+  }catch(e){}
+}
+function noise(d=1.6,v=.45,f=380){
+  if(!prefs.snd)return;
+  try{
+    const a=ctx(),buf=a.createBuffer(1,a.sampleRate*d,a.sampleRate),data=buf.getChannelData(0);
+    for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/data.length,2);
+    const s=a.createBufferSource();s.buffer=buf;
+    const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=f;
+    const g=a.createGain();g.gain.value=v;
+    s.connect(lp);lp.connect(g);g.connect(master);s.start();
+  }catch(e){}
+}
+const sfx={
+  ok(){[523,659,784,1047].forEach((f,i)=>tone(f,.22,'triangle',.18,i*.09))},
+  bad(){tone(190,.28,'sawtooth',.16,0,120);tone(140,.35,'sawtooth',.16,.14,90)},
+  tick(){tone(900,.06,'square',.07)},
+  click(){tone(480,.05,'square',.05)},
+  flip(){tone(620,.07,'triangle',.1)},
+  thunder(){noise(1.8,.55,320)},
+  creak(){tone(80,1.1,'sawtooth',.07,0,220)},
+  bell(){tone(660,1.8,'sine',.1);tone(990,1.4,'sine',.06,.02)},
+  owl(){tone(400,.4,'sine',.08,0,310);tone(400,.5,'sine',.08,.55,300)},
+  win(){[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,.3,'triangle',.18,i*.14))}
+};
+function startDrone(){
+  if(drone||!prefs.mus||!prefs.snd)return;
+  try{
+    const a=ctx(),g=a.createGain();g.gain.value=0;g.gain.linearRampToValueAtTime(.07,a.currentTime+3);
+    const lp=a.createBiquadFilter();lp.type='lowpass';lp.frequency.value=260;
+    const o1=a.createOscillator(),o2=a.createOscillator(),lfo=a.createOscillator(),lg=a.createGain();
+    o1.type=o2.type='sawtooth';o1.frequency.value=55;o2.frequency.value=55.8;
+    lfo.frequency.value=.12;lg.gain.value=90;lfo.connect(lg);lg.connect(lp.frequency);
+    o1.connect(lp);o2.connect(lp);lp.connect(g);g.connect(master);
+    [o1,o2,lfo].forEach(o=>o.start());
+    drone={stop(){g.gain.linearRampToValueAtTime(0,a.currentTime+1);setTimeout(()=>[o1,o2,lfo].forEach(o=>{try{o.stop()}catch(e){}}),1200)}};
+  }catch(e){}
+}
+function stopDrone(){if(drone){drone.stop();drone=null}}
+function ambient(){
+  if(['countdown','story','game'].includes(state.phase)&&prefs.snd){
+    const r=rnd(3);
+    if(r===0)sfx.bell();else if(r===1)sfx.owl();else{sfx.thunder();flash()}
+  }
+  setTimeout(ambient,18000+rnd(22000));
+}
+setTimeout(ambient,20000);
+
+/* ================= FELOLVASÁS ================= */
+function speak(text){
+  if(!prefs.read||!('speechSynthesis' in window))return;
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(plain(text));
+    u.lang='hu-HU';u.rate=.92;u.pitch=.85;
+    const v=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.toLowerCase().startsWith('hu'));
+    if(v)u.voice=v;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+if('speechSynthesis' in window)speechSynthesis.getVoices();
+
+/* ================= EFFEKTEK ================= */
+const bg=$('#bg'),bc=bg.getContext('2d'),fx=$('#fx'),fc=fx.getContext('2d');
+let W=0,H=0,stars=[],bats=[];
+function resize(){
+  W=bg.width=fx.width=innerWidth;H=bg.height=fx.height=innerHeight;
+  stars=Array.from({length:Math.min(140,(W*H/9000)|0)},()=>({x:Math.random()*W,y:Math.random()*H*.85,r:Math.random()*1.4+.3,p:Math.random()*6.28}));
+}
+resize();addEventListener('resize',resize);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+bats=Array.from({length:reduce?0:7},()=>({x:Math.random()*W,y:Math.random()*H*.6,vx:.6+Math.random()*1.3,s:20+Math.random()*22,ph:Math.random()*6.28}));
+function loopBg(t){
+  bc.clearRect(0,0,W,H);bc.fillStyle='#fff';
+  stars.forEach(s=>{bc.globalAlpha=.35+.65*Math.abs(Math.sin(t/900+s.p));bc.beginPath();bc.arc(s.x,s.y,s.r,0,6.283);bc.fill()});
+  bc.globalAlpha=.85;
+  bats.forEach(b=>{
+    b.x+=b.vx;b.y+=Math.sin(t/400+b.ph)*.8;
+    if(b.x>W+60){b.x=-60;b.y=Math.random()*H*.6}
+    bc.save();bc.translate(b.x,b.y);bc.scale(1+.25*Math.sin(t/90+b.ph),1);bc.font=b.s+'px serif';bc.fillText('🦇',0,0);bc.restore();
+  });
+  requestAnimationFrame(loopBg);
+}
+requestAnimationFrame(loopBg);
+
+let parts=[],fxRun=false;
+const COL=['#ff7a1a','#ffc83d','#9b5de5','#3ddc84','#ff4d5e','#4cc9f0'],EMO=['🎃','🦇','👻','🕷️','🍬','⭐'];
+function confetti(n=120,x=W/2,y=H/3){
+  for(let i=0;i<n;i++)parts.push({x,y,vx:(Math.random()-.5)*13,vy:-Math.random()*13-4,r:Math.random()*6.28,vr:(Math.random()-.5)*.3,s:10+Math.random()*16,t:Math.random()<.35?EMO[rnd(EMO.length)]:null,c:COL[rnd(COL.length)],life:130+Math.random()*90});
+  if(!fxRun){fxRun=true;requestAnimationFrame(loopFx)}
+}
+function loopFx(){
+  fc.clearRect(0,0,W,H);
+  parts=parts.filter(p=>p.life>0&&p.y<H+50);
+  parts.forEach(p=>{
+    p.vy+=.25;p.x+=p.vx;p.y+=p.vy;p.vx*=.99;p.r+=p.vr;p.life--;
+    fc.save();fc.translate(p.x,p.y);fc.rotate(p.r);
+    if(p.t){fc.font=p.s+'px serif';fc.fillText(p.t,0,0)}else{fc.fillStyle=p.c;fc.fillRect(-p.s/2,-p.s/4,p.s,p.s/2)}
+    fc.restore();
+  });
+  if(parts.length)requestAnimationFrame(loopFx);else{fxRun=false;fc.clearRect(0,0,W,H)}
+}
+function flash(){const f=$('#flash');f.classList.remove('on');void f.offsetWidth;f.classList.add('on')}
+let toastT=null;
+function toast(msg,ms=3800){const t=$('#toast');t.textContent=msg;t.classList.remove('hidden');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.add('hidden'),ms)}
+let typeT=null;
+function typeText(el,text,speed=22){
+  clearInterval(typeT);el.textContent='';let i=0;
+  typeT=setInterval(()=>{el.textContent=text.slice(0,++i);if(i>=text.length)clearInterval(typeT)},speed);
+  el.onclick=()=>{clearInterval(typeT);el.textContent=text};
+}
+let wakeLock=null;
+async function keepAwake(){try{if('wakeLock' in navigator)wakeLock=await navigator.wakeLock.request('screen')}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&state.phase!=='setup')keepAwake()});
+
+/* ================= ADATOK ================= */
+const FLOORS=[
+  {name:'A Kripta',emoji:'⚰️',intro:'A kriptában dohos hideg van, a falakon gyertyafény remeg. Három pecsét őrzi a feljárót, és mindegyik mögött egy régi trükk bújik meg. Maradjatok nyugodtak, és gondolkodjatok!'},
+  {name:'A Laboratórium',emoji:'⚗️',intro:'A laboratórium asztalain lombikok bugyognak, a falon kitépett jegyzetlapok lógnak. Aki itt hibázik, annak a keveréke felrobban. Figyeljetek a részletekre!'},
+  {name:'Az Elátkozott Könyvtár',emoji:'📚',intro:'Poros kötetek tornyosulnak a polcokon, és a lapok maguktól lapozgatnak. A tudás hatalom, de a figyelem a kulcs. Csak a legélesebb elme találja meg a kiutat.'},
+  {name:'A Trónterem',emoji:'👑',intro:'Az utolsó emelet. A trónterem kapuja előtt négy próba áll, és a végén egy négyjegyű zár. Mindent be kell vetnetek, amit eddig összegyűjtöttetek!'}
+];
+const STORY='Kattan a zár! A képernyő fénye elhalványul, és egyszerre egy elátkozott kastély folyosóján találjátok magatokat. Egy mély hang suttogja: „Négy szinten át, tizenhárom rejtéllyel kell bizonyítanotok. Ha az óra lejár, a kastély örökre megtart titeket.” Csak az ész, a megfigyelőkészség és a hidegvér segíthet a kijutásban. Induljon az első szint: A Kripta!';
+const PRAISE=['Szép munka! 🎉','Kitűnő! A pecsét feltört! ✨','Zseniális! 🧠','Pontos megoldás! 🏆','Így kell ezt! 🔓','A kastély meghajol előttetek! 🦇'];
+
+/* --- segédek --- */
+function textInput(h,api,o){
+  h.innerHTML=`${o.pre||''}<input type="text" id="ans" autocomplete="off" placeholder="${o.ph}" maxlength="24"><br><button class="btn" id="go">${o.btn||'✔ Ellenőrzés'}</button>`;
+  const chk=()=>{
+    const raw=$('#ans').value, v=o.num?raw.replace(/\D/g,''):norm(raw);
+    const ok=o.num?o.ok.includes(v):o.ok.some(a=>v.includes(a));
+    if(v&&ok)api.win(o.clue);else api.lose(o.bad);
+  };
+  $('#go').onclick=chk;$('#ans').onkeydown=e=>{if(e.key==='Enter')chk()};
+  setTimeout(()=>{const a=$('#ans');if(a)a.focus()},100);
+}
+/* qs: [{q, o:[helyes, rossz...], fixed?}]  – az első opció a helyes */
+function choiceQuiz(h,api,qs,clue,badMsg){
+  let r=0;
+  const show=()=>{
+    const q=qs[r];
+    const opts=q.o.map((t,i)=>({t,i}));
+    const list=q.fixed?opts:shuf(opts);
+    h.innerHTML=`${qs.length>1?`<div style="font-weight:900;font-size:19px">❓ ${r+1}. kérdés a(z) ${qs.length}-ból</div>`:''}
+      ${q.q?`<p class="story" style="text-align:center">${q.q}</p>`:''}
+      <div>${list.map(x=>`<button class="btn" data-i="${x.i}">${x.t}</button>`).join('')}</div>`;
+    $$('#host .btn').forEach(b=>b.onclick=()=>{
+      if(+b.dataset.i===0){
+        if(++r<qs.length){sfx.ok();confetti(40);show()}
+        else api.win(clue);
+      }else api.lose(badMsg||'Nem ez a helyes válasz. Gondold át még egyszer!');
+    });
+  };
+  show();
+}
+
+const STAGES=[
+/* 1 */{floor:0,role:'Rejtjel',title:'A Kripta Kódja',
+  text:'A kripta kapuján egy felirat világít, de a betűk el vannak tolva az ábécében. Minden betű helyett az ábécében hárommal későbbi áll: az A helyén D, a B helyén E, és így tovább. Fejtsétek meg, kinek a sírboltja ez!',
+  hint:'Lépj hármat visszafelé az ábécében: G helyett D, U helyett R… Az ábécé a rejtjel fölött van.',
+  render(h,api){
+    textInput(h,api,{pre:`<div class="abc">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div><div class="cipher">G - U - D - N - X - O - D</div>`,
+      ph:'A sírbolt gazdája…',btn:'🔓 Pecsét feltörése',ok:['DRAKULA','DRACULA'],
+      clue:{icon:'🧛',text:'A név 7 betűs',digit:7},bad:'Ez még nem az igazi név. Számold át a betűket egyesével!'});
+  }},
+/* 2 */{floor:0,role:'Számsor',title:'A Rothadt Számsor',
+  text:'A falon bevésett számok sorakoznak: 2, 6, 12, 20, 30 … Egy szám hiányzik a sor végéről. Melyik az? Írjátok be a számot!',
+  hint:'Nézd meg a különbségeket az egymást követő számok között: 4, 6, 8, 10… Hogyan folytatódik?',
+  render(h,api){
+    textInput(h,api,{pre:`<div class="cipher">2 · 6 · 12 · 20 · 30 · ?</div>`,ph:'A hiányzó szám',num:1,ok:['42'],
+      clue:{icon:'🔢',text:'A számsor folytatása: 42'},bad:'Ez nem illik a sorba. Nézzétek a különbségeket!'});
+  }},
+/* 3 */{floor:0,role:'Találós kérdés',title:'A Sírásó Fejtörője',
+  text:'A sírásó egy régi találóskérdést karcolt a kőbe: „Minél többet elveszel belőlem, annál nagyobb vagyok. Mi vagyok?” Írjátok be a választ!',
+  hint:'Gondolj a lapátra és a földre. Mit hagysz magad után, ha kiveszel valamit?',
+  render(h,api){
+    textInput(h,api,{pre:`<div style="font-size:64px;margin:8px">⚰️</div>`,ph:'A válasz…',ok:['LYUK','GODOR'],
+      clue:{icon:'🕳️',text:'A sírásó rejtvénye: a lyuk'},bad:'Nem ez az. Gondolj arra, mi marad, ha kiveszel valamit!'});
+  }},
+/* 4 */{floor:1,role:'Logika',title:'A Bájital Sorrend',
+  text:'Öt lombik áll a polcon: Zöld, Kék, Lila, Piros és Sárga. Rakjátok sorba őket balról jobbra! A Zöld áll legelöl. A Sárga áll legvégül. A Kék közvetlenül a Zöld mellett áll, tőle jobbra. A Piros közvetlenül a Sárga előtt áll. Koppintsatok a lombikokra a helyes sorrendben!',
+  hint:'Az 1. hely: Zöld, a 5. hely: Sárga. A Kék a 2., a Piros a 4. helyre kerül. Mi marad a közepére?',
+  render(h,api){
+    const F={zold:{n:'Zöld',c:'#22c55e'},kek:{n:'Kék',c:'#3b82f6'},lila:{n:'Lila',c:'#a855f7'},piros:{n:'Piros',c:'#ef4444'},sarga:{n:'Sárga',c:'#facc15'}};
+    const disp=shuf(Object.keys(F)),sol=['zold','kek','lila','piros','sarga'];let order=[];
+    const draw=()=>{
+      h.innerHTML=`<div class="shelf">${disp.map(k=>`<button class="flaskbtn ${order.includes(k)?'used':''}" data-k="${k}"><div class="flask" style="--c:${F[k].c}"></div>${F[k].n}</button>`).join('')}</div>
+      <div style="font-weight:800;color:#b9a5e6">⬇️ A sorrend (koppints egy helyre a levételhez)</div>
+      <div class="slots">${sol.map((_,i)=>`<div class="slot" data-i="${i}">${order[i]?`<div class="flask" style="--c:${F[order[i]].c}"></div>`:`<small>${i+1}</small>`}</div>`).join('')}</div>`;
+      $$('.flaskbtn').forEach(b=>b.onclick=()=>{sfx.click();order.push(b.dataset.k);draw();
+        if(order.length===5){
+          if(order.join()===sol.join())api.win({icon:'⚗️',text:'A lila lombik a 3. helyen áll',digit:3});
+          else{api.lose('A keverék felrobbant! Kezdjétek elölről!');order=[];setTimeout(draw,450)}
+        }});
+      $$('.slot').forEach(s=>s.onclick=()=>{if(order[s.dataset.i]){sfx.click();order.splice(+s.dataset.i);draw()}});
+    };
+    draw();
+  }},
+/* 5 */{floor:1,role:'Következtetés',title:'A Három Ajtó',
+  text:'Három ajtó áll előttetek, A, B és C. Csak az egyik mögött van a kijárat. Mindegyik ajtón felirat látható, de pontosan EGY felirat igaz. A: „A kijárat itt van.” B: „A kijárat nem ebben az ajtóban van.” C: „A kijárat nem az A ajtó mögött van.” Melyik ajtón kell kimenni?',
+  hint:'Tegyétek fel sorban, hogy a kijárat az A, a B, majd a C ajtó mögött van, és számoljátok meg, hány felirat lenne igaz.',
+  render(h,api){
+    choiceQuiz(h,api,[{fixed:1,q:'',o:['🚪 B ajtó','🚪 A ajtó','🚪 C ajtó']}].map(q=>({...q,o:['🚪 B ajtó','🚪 A ajtó','🚪 C ajtó']})),
+      {icon:'🚪',text:'A kijárat a B ajtó mögött volt'},'Ezen az ajtón nem lehet kijutni. Ellenőrizzétek, hány felirat lenne igaz!');
+  }},
+/* 6 */{floor:1,role:'Számrendszer',title:'A Bináris Zár',
+  text:'A gép kijelzőjén villogó nullák és egyesek: 100111. Ez egy kettes számrendszerbeli szám. Mennyi ez tízes számrendszerben?',
+  hint:'A helyi értékek jobbról balra: 1, 2, 4, 8, 16, 32. Add össze azokat, ahol 1-es áll!',
+  render(h,api){
+    textInput(h,api,{pre:`<div class="cipher">1 0 0 1 1 1</div>`,ph:'Tízes számrendszerben',num:1,ok:['39'],
+      clue:{icon:'💾',text:'A bináris zár értéke: 39'},bad:'Nem stimmel. Add össze a helyi értékeket!'});
+  }},
+/* 7 */{floor:2,role:'Betűrejtvény',title:'A Kusza Betűk',
+  text:'A könyvtár egyik oldaláról leugrottak a betűk, és összekeveredtek. Rakjátok össze belőlük a szót! Segítség: az, amit a kastélyban kerestek, és amitől félnek az emberek.',
+  hint:'A szó a kísértet egyik szinonimája, hét betűből áll, és két L van benne.',
+  render(h,api){
+    const word='SZELLEM';let sc;do{sc=shuf(word.split('')).join('')}while(sc===word);
+    textInput(h,api,{pre:`<div class="cipher">${sc.split('').join(' ')}</div>`,ph:'A szó…',ok:['SZELLEM'],
+      clue:{icon:'👻',text:'A könyvtár betűrejtvénye: a szellem'},bad:'Nem ez a szó. Próbáljátok másképp rendezni a betűket!'});
+  }},
+/* 8 */{floor:2,role:'Műveltség',title:'A Rémtörténetek Tára',
+  text:'A könyvtár polcain a horror klasszikusai porosodnak. Három kérdésre kell helyesen válaszolnotok, hogy a polc félrecsússzon.',
+  hint:'A halloween kelta eredetű, a Drakula szerzője ír író, a vár pedig Erdélyben, a Kárpátok ölelésében áll.',
+  render(h,api){
+    choiceQuiz(h,api,[
+      {q:'Melyik ősi kelta ünnepből ered a halloween?',o:['Samhain','Beltane','Imbolc','Yule']},
+      {q:'Ki írta a Drakula című regényt (1897)?',o:['Bram Stoker','Mary Shelley','Edgar Allan Poe','H. P. Lovecraft']},
+      {q:'Melyik országban áll a Drakula-legendához kötődő Bran-kastély?',o:['Románia','Bulgária','Szlovákia','Ausztria']}
+    ],{icon:'📖',text:'A rémtörténetek polca félrecsúszott'});
+  }},
+/* 9 */{floor:2,role:'Figyelem',title:'A Pókhálós Polcok',
+  text:'A könyvtár polcain békák és pókok kúsznak. Számoljátok meg, hány darab PÓK van a képen! Csak a pókokat számoljátok, a békákat ne! Aztán koppintsatok a helyes számra.',
+  hint:'Menjetek végig sorban, és mindig csak a 🕷️ pókokat számoljátok. Érdemes ketten ellenőrizni egymást.',
+  render(h,api){
+    if(!state.spiders){state.spiders=3+rnd(6);save()}
+    const n=state.spiders,items=shuf([...Array(n).fill('🕷️'),...Array(5+rnd(4)).fill('🐸')]);
+    h.innerHTML=`<div class="emoji-grid" style="grid-template-columns:repeat(${Math.min(items.length,7)},auto)">${items.map(e=>`<button tabindex="-1">${e}</button>`).join('')}</div>
+    <div class="numpad">${[1,2,3,4,5,6,7,8,9].map(x=>`<button class="btn" data-n="${x}">${x}</button>`).join('')}</div>`;
+    $$('.numpad .btn').forEach(b=>b.onclick=()=>{
+      if(+b.dataset.n===n)api.win({icon:'🕷️',text:`A pókok száma: ${n}`,digit:n});
+      else api.lose('Nem stimmel. Számoljátok újra, csak a pókokat!');
+    });
+  }},
+/* 10 */{floor:3,role:'Gondolkodj ki a dobozból',title:'A Boszorkányüst',
+  text:'A trónterem előszobájában boszorkányok főzik a bájitalt. 5 boszorkány 5 perc alatt 5 bájitalt főz meg. Hány perc alatt főz meg 100 boszorkány 100 bájitalt? Írjátok be a számot!',
+  hint:'Hány bájitalt főz meg egy boszorkány 5 perc alatt? Mi történik, ha ugyanannyi boszorkány ugyanannyi bájitalt főz?',
+  render(h,api){
+    textInput(h,api,{pre:`<div style="font-size:64px;margin:8px">🧙‍♀️🧙‍♀️🧙‍♀️</div>`,ph:'Hány perc?',num:1,ok:['5'],
+      clue:{icon:'🧪',text:'A boszorkányüst: 5 perc'},bad:'Nem ennyi. Gondoljátok végig, mennyit főz egy boszorkány!'});
+  }},
+/* 11 */{floor:3,role:'Megfigyelés',title:'A Kakukktojás',
+  text:'A trónterem szellemei elbújtak a kijelzőn, és egyformák… de egy közülük mindig más. Keressétek meg a kakukktojást! Három körön át kell kitartanotok, és minden kör nagyobb.',
+  hint:'Nézzétek végig sorról sorra! A kakukktojás kicsit másképp néz ki, mint a többi.',
+  render(h,api){
+    const pairs=shuf([['🧟','🧛'],['🎃','🍊'],['🦉','🦅'],['🐈‍⬛','🐈']]),dims=[[5,4],[6,5],[8,6]];let r=0;
+    const round=()=>{
+      const [c,rw]=dims[r],pr=pairs[r],odd=rnd(c*rw);
+      h.innerHTML=`<div style="font-weight:900;font-size:19px">🔎 ${r+1}. kör a 3-ból</div><div class="emoji-grid" style="grid-template-columns:repeat(${c},auto)">${
+        Array.from({length:c*rw},(_,i)=>`<button data-o="${i===odd?1:0}">${i===odd?pr[1]:pr[0]}</button>`).join('')}</div>`;
+      $$('.emoji-grid button').forEach(b=>b.onclick=()=>{
+        if(b.dataset.o==='1'){
+          if(++r<3){sfx.ok();confetti(40);round()}
+          else api.win({icon:'👁️',text:'A kakukktojás-próba kulcsa'});
+        }else api.lose('Nem ez az! Nézzétek meg alaposabban!');
+      });
+    };
+    round();
+  }},
+/* 12 */{floor:3,role:'Memória',title:'A Szellem-memória',
+  text:'A trónterem padlóján kártyák fekszenek lefordítva. Fordítsátok fel őket, és találjátok meg az egyforma párokat! Jegyezzétek meg, hol mi volt!',
+  hint:'Fordítsatok fel két kártyát. Ha egyformák, ott maradnak. Ha nem, jegyezzétek meg a helyüket!',
+  render(h,api){
+    const cards=shuf(['👻','👻','🎃','🎃','🦇','🦇','🕷️','🕷️']);let up=[],matched=0,lock=false;
+    h.innerHTML=`<div class="memgrid" style="grid-template-columns:repeat(4,1fr);max-width:520px">${cards.map((c,i)=>`<button class="mem" data-i="${i}">❓</button>`).join('')}</div>`;
+    const els=$$('.mem');
+    els.forEach(b=>b.onclick=()=>{
+      const i=+b.dataset.i;if(lock||up.includes(i)||b.classList.contains('ok'))return;
+      sfx.flip();b.textContent=cards[i];b.classList.add('up');up.push(i);
+      if(up.length===2){
+        lock=true;const [a,c]=up;
+        if(cards[a]===cards[c]){
+          setTimeout(()=>{els[a].classList.replace('up','ok');els[c].classList.replace('up','ok');sfx.ok();up=[];lock=false;
+            if(++matched===4)api.win({icon:'👻',text:'A kártyapárok száma: 4',digit:4})},450);
+        }else setTimeout(()=>{[a,c].forEach(k=>{els[k].textContent='❓';els[k].classList.remove('up')});up=[];lock=false},950);
+      }
+    });
+  }},
+/* 13 */{floor:3,role:'A végső zár',title:'A Házigazda Zára',
+  text:'Ez az utolsó ajtó! A trónterem kapuját négyjegyű kód zárja. Gyűjtsétek össze a kulcstáskában talált számokat, ebben a sorrendben: egy, a sírbolt gazdája nevének betűszáma. Kettő, a lila lombik helye balról. Három, a pókok száma a könyvtárban. Négy, a memóriakártya-párok száma. Írjátok be a kódot!',
+  hint:'Nézzétek meg fent a kulcstáskát! Mindegyik számot megtaláljátok benne.',
+  render(h,api){
+    const code=[0,3,8,11].map(i=>String(state.clues[i]&&state.clues[i].digit));let cur='';
+    const draw=()=>{
+      h.innerHTML=`<div style="font-weight:800;margin-top:6px">1. Betűszám · 2. Lila lombik helye · 3. Pókok · 4. Kártyapárok</div>
+      <div class="codeSlots">${[0,1,2,3].map(i=>`<b>${cur[i]||'•'}</b>`).join('')}</div>
+      <div class="numpad">${[1,2,3,4,5,6,7,8,9,0].map(x=>`<button class="btn" data-n="${x}">${x}</button>`).join('')}<button class="btn grey" data-n="x">⌫</button></div>`;
+      $$('.numpad .btn').forEach(b=>b.onclick=()=>{
+        sfx.click();
+        if(b.dataset.n==='x')cur=cur.slice(0,-1);else if(cur.length<4)cur+=b.dataset.n;
+        draw();
+        if(cur.length===4){
+          if(cur===code.join(''))api.win({icon:'🚪',text:'A kastély kapuja kinyílt'});
+          else{api.lose('Rossz kód! Nézzétek meg újra a kulcstáskát!');cur='';setTimeout(draw,500)}
+        }
+      });
+    };
+    draw();
+  }}
+];
+const LAST=STAGES.length-1;
+
+/* ================= FELÜLET ================= */
+function show(id){
+  ['setup','story','interlude','stage','finale'].forEach(x=>$('#'+x).classList.toggle('hidden',x!==id));
+  $('#hud').classList.toggle('hidden',!['interlude','stage'].includes(id));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function updateHud(){
+  const i=state.stage,S=STAGES[i],F=FLOORS[S.floor];
+  $('#floorLbl').textContent=`${F.emoji} ${S.floor+1}. szint: ${F.name} · ${state.stage+1}/${STAGES.length}`;
+  $('#dots').innerHTML=STAGES.map((_,k)=>`<i class="${state.clues[k]?'done':k===i?'cur':''}"></i>`).join('');
+  updateBag();
+}
+function updateBag(){
+  const c=Object.keys(state.clues).map(Number).sort((a,b)=>a-b);
+  $('#bag').innerHTML=c.length?`<strong>🎒 Kulcstáska:</strong>`+c.map(k=>`<span>${state.clues[k].icon} ${state.clues[k].text}</span>`).join(''):'';
+}
+
+/* --- visszaszámlálás --- */
+let lastSec=-1;
+function countdownUI(on){
+  $('#cfgBox').classList.toggle('hidden',on);
+  $('#startRow').classList.toggle('hidden',on);
+  $('#stopBtn').classList.toggle('hidden',!on);
+  $('#resumeBox').classList.add('hidden');
+}
+function startCountdown(sec){
+  state.phase='countdown';state.startAt=Date.now()+sec*1000;state.escapeMin=+$('#escSel').value;
+  save();countdownUI(true);keepAwake();ctx();startDrone();sfx.creak();
+}
+$('#startBtn').onclick=()=>startCountdown(+$('#cdSel').value);
+$('#testBtn').onclick=()=>startCountdown(10.5);
+$('#stopBtn').onclick=()=>{state.phase='setup';clearSave();countdownUI(false);$('#warn').classList.add('hidden');$('#timer').classList.remove('danger');$('#timer').textContent=fmt(+$('#cdSel').value*1000);stopDrone();document.title='Kísértetház: Felnőtt kiadás'};
+$('#cdSel').onchange=()=>{if(state.phase==='setup')$('#timer').textContent=fmt(+$('#cdSel').value*1000)};
+
+/* --- beállítások --- */
+[['tRead','read'],['tSnd','snd'],['tMus','mus']].forEach(([id,k])=>{
+  const el=$('#'+id);el.checked=prefs[k];
+  el.onchange=()=>{prefs[k]=el.checked;savePrefs();
+    if(!prefs.snd||!prefs.mus)stopDrone();else if(state.phase!=='setup')startDrone();
+    if(!prefs.read&&'speechSynthesis' in window)speechSynthesis.cancel()};
+});
+
+/* --- történet --- */
+function beginStory(){
+  state.phase='story';save();
+  $('#timer').classList.remove('danger');$('#warn').classList.add('hidden');
+  sfx.thunder();flash();sfx.creak();
+  show('story');startDrone();
+  typeText($('#storyText'),STORY,24);speak(STORY);
+  document.title='🏰 Kísértetház';
+}
+$('#storyRead').onclick=()=>speak(STORY);
+$('#storyGo').onclick=()=>{
+  if(speechSynthesis)speechSynthesis.cancel();
+  state.phase='game';state.gameStart=Date.now();
+  state.escapeEnd=state.escapeMin?Date.now()+state.escapeMin*60000:0;
+  save();sfx.ok();goStage(0);
+};
+
+/* --- emeletek / feladatok --- */
+function goStage(i){
+  const first=i>0&&STAGES[i-1].floor!==STAGES[i].floor;
+  if(first)showInterlude(i);else renderStage(i);
+}
+function showInterlude(i){
+  const F=FLOORS[STAGES[i].floor];
+  state.stage=i;save();show('interlude');updateHud();
+  $('#ilEmoji').textContent=F.emoji;$('#ilTitle').textContent=`${STAGES[i].floor+1}. SZINT: ${F.name}`;
+  typeText($('#ilText'),F.intro,20);speak(F.intro);sfx.creak();sfx.thunder();flash();
+  $('#ilRead').onclick=()=>speak(F.intro);
+  $('#ilGo').onclick=()=>{speechSynthesis&&speechSynthesis.cancel();renderStage(i)};
+}
+function renderStage(i){
+  state.stage=i;save();
+  const S=STAGES[i],F=FLOORS[S.floor],card=$('#stage');
+  show('stage');updateHud();
+  card.innerHTML=`<div class="level-tag">${F.emoji} ${S.floor+1}. SZINT: ${F.name.toUpperCase()}</div>
+    <div class="roles"><span class="role-tag" style="background:#6b3fa8">🧩 ${S.role}</span></div>
+    <h2>${i+1}. rejtély: ${S.title}</h2>
+    <p class="story">${S.text}</p>
+    <div><button class="btn small ghost" id="reread">🔊 Újraolvasás</button><button class="btn small ghost" id="hintBtn">💡 Tipp (−2 perc)</button></div>
+    <div id="hintBox" class="hint hidden"></div>
+    <div id="host"></div><p class="fb" id="fb"></p>
+    <div id="nextRow" class="hidden"><button class="btn go" id="nextBtn"></button></div>`;
+  let solved=false;
+  const api={
+    win(clue){
+      if(solved)return;solved=true;
+      state.clues[i]=clue;save();updateHud();
+      sfx.ok();confetti(i===LAST?200:110);
+      const p=PRAISE[rnd(PRAISE.length)];
+      $('#fb').textContent=p;$('#fb').className='fb ok';speak(p);
+      $('#host').classList.add('locked');
+      $('#nextRow').classList.remove('hidden');
+      const nx=$('#nextBtn');
+      nx.textContent=i===LAST?'🚪 Kijutottatok!':(STAGES[i+1].floor!==S.floor?'⬆️ Fel a következő emeletre':'➡️ Következő rejtvény');
+      nx.onclick=()=>{speechSynthesis&&speechSynthesis.cancel();i===LAST?finish():goStage(i+1)};
+      nx.scrollIntoView({behavior:'smooth',block:'center'});
+    },
+    lose(msg){
+      if(solved)return;
+      state.mistakes++;save();sfx.bad();
+      card.classList.remove('shake');void card.offsetWidth;card.classList.add('shake');
+      $('#fb').textContent='❌ '+msg;$('#fb').className='fb bad';speak(msg);
+    }
+  };
+  S.render($('#host'),api);
+  $('#reread').onclick=()=>speak(S.text);
+  $('#hintBtn').onclick=()=>{
+    if(!state.hintsShown[i]){
+      state.hintsShown[i]=1;state.hints++;
+      if(state.escapeEnd)state.escapeEnd-=120000;
+      save();toast('💡 Tipp felhasználva: −2 perc a szökési időből');
+    }
+    const b=$('#hintBox');b.textContent='💡 '+S.hint;b.classList.remove('hidden');speak(S.hint);
+  };
+  if(prefs.read)setTimeout(()=>speak(S.text),500);
+}
+
+/* --- finálé --- */
+function finish(){
+  state.phase='done';save();
+  const used=Date.now()-state.gameStart;
+  const stars=state.hints<=1&&state.mistakes<=5?3:state.hints<=4&&state.mistakes<=15?2:1;
+  show('finale');$('#hud').classList.add('hidden');
+  sfx.thunder();flash();setTimeout(()=>sfx.win(),600);
+  $('#finale').innerHTML=`<h2 style="font-size:clamp(34px,7vw,60px)">🎉 KISZABADULTATOK! 🎉</h2>
+    <p style="font-size:20px">A kastély kapuja feltárult, és kijutottatok a Digitális Csapdából. ${['Egy kis szerencse is kellett…','Derekas teljesítmény!','Tökéletes szellemvadász-munka!'][stars-1]}</p>
+    <div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
+    <div class="stats"><div>⏱ Idő: ${fmt(used)}</div><div>💡 Tippek: ${state.hints}</div><div>❌ Hibák: ${state.mistakes}</div></div>
+    <div class="cert" id="cert"><h3>🏆 SZELLEMVADÁSZ OKLEVÉL 🏆</h3>
+      <p style="font-size:20px;line-height:1.7">Ezennel igazoljuk, hogy a csapat kiszabadult a kísértetházból, és mind a tizenhárom rejtélyt megoldotta!</p>
+      <p>👑 Kelt: ${new Date().toLocaleDateString('hu-HU')} · Halloween</p></div>
+    <button class="btn" onclick="window.print()">🖨️ Oklevél nyomtatása</button>
+    <button class="btn ghost" id="again">🔁 Új játék</button>`;
+  $('#again').onclick=()=>{clearSave();location.reload()};
+  [0,500,1000,1600,2300].forEach((d,k)=>setTimeout(()=>confetti(120,W*(.2+.15*k),H/3),d));
+  speak('Gratulálunk! Kiszabadultatok a kísértetházból!');
+  stopDrone();document.title='🎉 Kiszabadultatok!';
+}
+
+/* ================= FŐ ÓRA ================= */
+function tick(){
+  const now=Date.now();
+  if(state.phase==='countdown'){
+    const rem=state.startAt-now,sec=Math.ceil(rem/1000);
+    $('#timer').textContent=fmt(rem);document.title='⏳ '+fmt(rem)+' – Kísértetház';
+    if(rem<=10500&&rem>0){
+      $('#warn').classList.remove('hidden');$('#timer').classList.add('danger');
+      if(sec!==lastSec){lastSec=sec;sfx.tick();if(sec<=3)flash()}
+    }
+    if(rem<=0)beginStory();
+  }else if(state.phase==='game'&&state.escapeEnd){
+    const rem=state.escapeEnd-now;
+    $('#escape').textContent='⏱ '+fmt(rem);$('#escape').classList.toggle('low',rem<=300000);
+    if(rem<=0){
+      state.graces++;state.escapeEnd=now+600000;save();
+      sfx.thunder();flash();toast('👻 Az óra lejárt… de a Házigazda jó kedvében van: kaptok még 10 percet!',6000);
+      speak('Az óra lejárt, de a Házigazda jó kedvében van. Kaptok még tíz percet!');
+    }
+  }else if(state.phase==='game'){$('#escape').textContent='⏱ ∞'}
+}
+setInterval(tick,250);
+
+/* ================= INDULÁS / FOLYTATÁS ================= */
+(function init(){
+  $('#timer').textContent=fmt(+$('#cdSel').value*1000);
+  const sv=load();
+  if(!sv||sv.phase==='setup'||sv.phase==='done')return;
+  if(sv.phase==='countdown'){
+    Object.assign(state,sv);countdownUI(true);return;
+  }
+  const label=sv.phase==='story'?'▶ Folytatás a bevezetőnél':`▶ Folytatás a(z) ${sv.stage+1}. rejtélytől`;
+  $('#resumeBox').classList.remove('hidden');$('#resumeBtn').textContent=label;
+  $('#resumeBtn').onclick=()=>{
+    Object.assign(state,sv);keepAwake();ctx();startDrone();
+    if(state.phase==='story')beginStory();else renderStage(state.stage);
+  };
+  $('#newBtn').onclick=()=>{clearSave();$('#resumeBox').classList.add('hidden')};
+})();
+</script>
+</body>
+</html>
